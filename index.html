@@ -6,6 +6,15 @@
   <meta name="description" content="한 번에 다섯 게임의 로또 번호를 추천해 드립니다.">
   <meta name="theme-color" content="#111827">
   <title>오늘의 로또 번호</title>
+  <script>
+    (() => {
+      const savedTheme = localStorage.getItem('theme');
+      const systemTheme = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.dataset.theme = savedTheme === 'light' || savedTheme === 'dark'
+        ? savedTheme
+        : systemTheme;
+    })();
+  </script>
   <style>
     :root {
       color-scheme: dark;
@@ -17,6 +26,36 @@
       --accent: #a3ff5f;
       --accent-strong: #80e63b;
       --shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+      --grid-line: rgba(255, 255, 255, 0.04);
+      --game-bg: rgba(255, 255, 255, 0.035);
+      --game-line: rgba(255, 255, 255, 0.07);
+      --notice: #8995a9;
+      --focus: #fff;
+      --glow-green: rgba(163, 255, 95, 0.14);
+      --glow-blue: rgba(59, 130, 246, 0.13);
+      --toggle-bg: rgba(255, 255, 255, 0.07);
+      --toggle-hover: rgba(255, 255, 255, 0.13);
+    }
+
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f3f7ef;
+      --panel: rgba(255, 255, 255, 0.86);
+      --panel-line: rgba(15, 23, 42, 0.10);
+      --text: #172011;
+      --muted: #596451;
+      --accent: #58ad26;
+      --accent-strong: #4a971f;
+      --shadow: 0 24px 70px rgba(54, 77, 39, 0.16);
+      --grid-line: rgba(23, 32, 17, 0.055);
+      --game-bg: rgba(84, 112, 63, 0.055);
+      --game-line: rgba(23, 32, 17, 0.08);
+      --notice: #697361;
+      --focus: #172011;
+      --glow-green: rgba(106, 190, 53, 0.18);
+      --glow-blue: rgba(59, 130, 246, 0.10);
+      --toggle-bg: rgba(23, 32, 17, 0.07);
+      --toggle-hover: rgba(23, 32, 17, 0.12);
     }
 
     * { box-sizing: border-box; }
@@ -27,12 +66,13 @@
       margin: 0;
       overflow-x: hidden;
       background:
-        radial-gradient(circle at 12% 10%, rgba(163, 255, 95, 0.14), transparent 28rem),
-        radial-gradient(circle at 88% 90%, rgba(59, 130, 246, 0.13), transparent 30rem),
+        radial-gradient(circle at 12% 10%, var(--glow-green), transparent 28rem),
+        radial-gradient(circle at 88% 90%, var(--glow-blue), transparent 30rem),
         var(--bg);
       color: var(--text);
       font-family: Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
       line-height: 1.5;
+      transition: background-color 220ms ease, color 220ms ease;
     }
 
     body::before {
@@ -41,8 +81,8 @@
       inset: 0;
       pointer-events: none;
       opacity: 0.16;
-      background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+      background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+                        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
       background-size: 48px 48px;
       mask-image: linear-gradient(to bottom, black, transparent 85%);
     }
@@ -52,19 +92,31 @@
       z-index: 1;
       display: grid;
       place-items: center;
-      width: min(100% - 32px, 880px);
+      width: min(calc(100% - 32px), 880px);
       min-height: 100vh;
       margin-inline: auto;
       padding-block: 48px;
     }
 
-    .app { width: 100%; }
+    .app {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-width: 0;
+      margin-bottom: 12px;
+    }
 
     .eyebrow {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      margin: 0 0 12px;
+      margin: 0;
       color: var(--accent);
       font-size: 0.82rem;
       font-weight: 800;
@@ -103,6 +155,7 @@
       background: var(--panel);
       box-shadow: var(--shadow);
       backdrop-filter: blur(18px);
+      transition: background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
     }
 
     .panel-head {
@@ -122,18 +175,15 @@
 
     .count {
       padding: 5px 10px;
-      border: 1px solid rgba(163, 255, 95, 0.22);
+      border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
       border-radius: 999px;
-      background: rgba(163, 255, 95, 0.08);
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
       color: var(--accent);
       font-size: 0.78rem;
       font-weight: 800;
     }
 
-    .games {
-      display: grid;
-      gap: 10px;
-    }
+    .games { display: grid; gap: 10px; }
 
     .game {
       display: grid;
@@ -142,9 +192,9 @@
       gap: 18px;
       min-width: 0;
       padding: 15px 18px;
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--game-line);
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.035);
+      background: var(--game-bg);
     }
 
     .game-label {
@@ -194,7 +244,7 @@
 
     .notice {
       margin: 0;
-      color: #8995a9;
+      color: var(--notice);
       font-size: 0.8rem;
     }
 
@@ -220,7 +270,43 @@
     }
 
     button:active { transform: translateY(0); }
-    button:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+    button:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+
+    .theme-toggle {
+      display: inline-grid;
+      flex: none;
+      grid-template-columns: 1fr 1fr;
+      min-height: 42px;
+      padding: 4px;
+      border: 1px solid var(--panel-line);
+      border-radius: 999px;
+      background: var(--toggle-bg);
+      color: var(--text);
+      box-shadow: none;
+    }
+
+    .theme-toggle:hover {
+      transform: none;
+      background: var(--toggle-hover);
+      box-shadow: none;
+    }
+
+    .theme-icon {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    :root[data-theme="dark"] .theme-icon--moon,
+    :root[data-theme="light"] .theme-icon--sun {
+      background: var(--accent);
+      color: #14200c;
+    }
 
     @keyframes ball-in {
       from { opacity: 0; transform: translateY(8px) scale(0.82); }
@@ -228,13 +314,15 @@
     }
 
     @media (max-width: 620px) {
-      main { width: min(100% - 22px, 880px); padding-block: 30px; }
+      main { width: min(calc(100% - 22px), 880px); padding-block: 30px; }
       .panel { border-radius: 22px; }
+      .topbar { align-items: flex-start; }
+      .eyebrow { max-width: 210px; font-size: 0.7rem; letter-spacing: 0.1em; }
       .game { grid-template-columns: 1fr; gap: 9px; padding: 14px 12px; }
-      .numbers { gap: 6px; }
+      .numbers { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
       .ball { min-width: 0; width: 100%; }
       .actions { align-items: stretch; flex-direction: column-reverse; }
-      button { width: 100%; }
+      #regenerate { width: 100%; }
       .notice { text-align: center; }
     }
 
@@ -246,9 +334,16 @@
 <body>
   <main>
     <section class="app" aria-labelledby="page-title">
-      <p class="eyebrow">Lucky number generator</p>
-      <h1 id="page-title">오늘의 행운을<br>가볍게 뽑아보세요.</h1>
-      <p class="intro">1부터 45까지, 겹치지 않는 여섯 개의 번호를 다섯 게임씩 추천해 드려요.</p>
+      <div class="topbar">
+        <p class="eyebrow">Lucky number generator</p>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="화이트 모드로 전환" aria-pressed="false">
+          <span class="theme-icon theme-icon--sun" aria-hidden="true">☀</span>
+          <span class="theme-icon theme-icon--moon" aria-hidden="true">☾</span>
+        </button>
+      </div>
+
+      <h1 id="page-title">오늘의 행운을<br>가볍게 뽑아보세요</h1>
+      <p class="intro">1부터 45까지, 겹치지 않는 여섯 개의 번호를 다섯 게임 추천해 드려요.</p>
 
       <div class="panel">
         <div class="panel-head">
@@ -259,7 +354,7 @@
         <div class="games" id="games" aria-live="polite" aria-label="로또 추천 번호"></div>
 
         <div class="actions">
-          <p class="notice">모든 조합의 당첨 확률은 동일하며 재미용 추천입니다.</p>
+          <p class="notice">모든 조합의 당첨 확률은 동일하며 재미로만 추천합니다.</p>
           <button id="regenerate" type="button">다시 추천</button>
         </div>
       </div>
@@ -269,6 +364,17 @@
   <script>
     const gamesElement = document.getElementById('games');
     const regenerateButton = document.getElementById('regenerate');
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+
+    function applyTheme(theme, persist = true) {
+      const isLight = theme === 'light';
+      document.documentElement.dataset.theme = isLight ? 'light' : 'dark';
+      themeToggle.setAttribute('aria-pressed', String(isLight));
+      themeToggle.setAttribute('aria-label', `${isLight ? '다크' : '화이트'} 모드로 전환`);
+      themeColor.setAttribute('content', isLight ? '#f3f7ef' : '#111827');
+      if (persist) localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
 
     function secureRandom(max) {
       if (window.crypto && window.crypto.getRandomValues) {
@@ -326,7 +432,12 @@
       gamesElement.replaceChildren(fragment);
     }
 
+    themeToggle.addEventListener('click', () => {
+      applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+    });
+
     regenerateButton.addEventListener('click', renderGames);
+    applyTheme(document.documentElement.dataset.theme, false);
     renderGames();
   </script>
 </body>
